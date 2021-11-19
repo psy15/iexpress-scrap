@@ -38,7 +38,6 @@ def write_to_file(titles):
     with open("myfile.id", "a") as file1:
         # Writing data to a file
         for i in titles:
-            # file1.write("Hello \n")
             file1.write(str(i)+'\n')
 
 
@@ -50,12 +49,17 @@ def get_list_of_urls():
     soup = BeautifulSoup(r1.content, 'html.parser')
 
     urls, ivs, title = [], [], []
-    link = soup.find(id="north-east-data")
 
+    headline = soup.find("div", {"class": "northeast-topbox"})
+    for i in headline.find_all('a'):
+        title.append(i.text)
+        urls.append(i.get('href'))
+
+    link = soup.find(id="north-east-data")
     for i in link.find_all('a'):
         t = i.text
         if len(t) >= 10:
-            title.append(i.text)
+            title.append(t)
             urls.append(i.get('href'))
 
     lis = read_from_file()
@@ -67,20 +71,9 @@ def get_list_of_urls():
     for i in urls:
         if i in lis:
             res.pop(i)
-        else:
-            print(i)
 
     write_to_file(list(res))
     return res
-
-
-# def start(update: Update, context: CallbackContext) -> None:
-#     """Send a message when the command /start is issued."""
-#     user = update.effective_user
-#     update.message.reply_markdown_v2(
-#         fr'Hi {user.mention_markdown_v2()}\!',
-#         reply_markup=ForceReply(selective=True),
-#     )
 
 
 def fun():
@@ -89,7 +82,7 @@ def fun():
 
     message_template = "<b>{title}</b><a href='{link}'> {lin}</a>"
 
-    for i in dict_:
+    for i in reversed(dict_):
 
         iv = f"http://t.me/iv?url={i}&rhash=1398b799d706ac"
         message = message_template.format(
@@ -110,8 +103,9 @@ def main() -> None:
 
     # on different commands - answer in Telegram
     # dispatcher.add_handler(CommandHandler("start", start))
-
-    fun()
+    while True:
+        fun()
+        sleep(7200)
 
 
 if __name__ == '__main__':
