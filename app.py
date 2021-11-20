@@ -29,51 +29,50 @@ log.addHandler(ch)
 
 
 def read_from_file():
-    with open("myfile.id", "r") as file1:
-        lines = file1.read().splitlines()
-        return lines
+    with open("last_posted_url.id", "r") as file1:
+        return file1.read().splitlines()
 
 
-def write_to_file(titles):
-    with open("myfile.id", "a") as file1:
-        # Writing data to a file
-        for i in titles:
-            file1.write(str(i)+'\n')
+def write_to_file(url):
+    with open("last_posted_url.id", "w") as file1:
+        file1.write(str(url[0]))
 
 
 def get_list_of_urls():
 
     target_url = "https://indianexpress.com/section/explained/"
-    r1 = requests.get(target_url)
+    response = requests.get(target_url)
 
-    soup = BeautifulSoup(r1.content, 'html.parser')
+    soup = BeautifulSoup(response.content, 'html.parser')
 
-    urls, ivs, title = [], [], []
+    all_urls, title = [], []
 
     headline = soup.find("div", {"class": "northeast-topbox"})
     for i in headline.find_all('a'):
         title.append(i.text)
-        urls.append(i.get('href'))
+        all_urls.append(i.get('href'))
 
     link = soup.find(id="north-east-data")
     for i in link.find_all('a'):
-        t = i.text
-        if len(t) >= 10:
-            title.append(t)
-            urls.append(i.get('href'))
+        title_length = len(i.text)
+        if title_length >= 10:
+            title.append(i.text)
+            all_urls.append(i.get('href'))
 
-    lis = read_from_file()
+    last_url = str(read_from_file()[0])
 
-    for i in urls:
-        ivs.append(f"http://t.me/iv?url={i}&rhash=1398b799d706ac")
+    urls_to_post = {}
 
-    res = dict(zip(urls, title))
-    for i in urls:
-        if i in lis:
-            res.pop(i)
+    for i in range(len(all_urls)):
+        if all_urls[i] != last_url:
+            urls_to_post[all_urls[i]] = title[i]
+        else:
+            break
 
-    write_to_file(list(res))
-    return res
+    if bool(urls_to_post):
+        write_to_file(list(urls_to_post)[:1])
+
+    return urls_to_post
 
 
 def fun():
@@ -90,19 +89,11 @@ def fun():
         log.info("message: {}".format(message))
         bot.sendMessage(chat_id=CHANNEL,
                         parse_mode=telegram.ParseMode.HTML, text=message, disable_web_page_preview=False)
-        sleep(120)
+        sleep(180)
 
 
 def main() -> None:
-    """Start the bot."""
-    # Create the Updater and pass it your bot's token.
-    updater = Updater(TOKEN)
 
-    # Get the dispatcher to register handlers
-    dispatcher = updater.dispatcher
-
-    # on different commands - answer in Telegram
-    # dispatcher.add_handler(CommandHandler("start", start))
     while True:
         fun()
         sleep(7200)
