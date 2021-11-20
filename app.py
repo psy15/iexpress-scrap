@@ -1,12 +1,12 @@
-import requests
-from bs4 import BeautifulSoup
 import os
 import logging
 import sys
+from time import sleep
 import telegram
 # from telegram import Update, ForceReply
-from telegram.ext import Updater
-from time import sleep
+# from telegram.ext import Updater
+import requests
+from bs4 import BeautifulSoup
 import dotenv
 
 dotenv_file = dotenv.find_dotenv()
@@ -52,8 +52,8 @@ def get_list_of_urls():
         title.append(i.text)
         all_urls.append(i.get('href'))
 
-    link = soup.find(id="north-east-data")
-    for i in link.find_all('a'):
+    data = soup.find(id="north-east-data")
+    for i in data.find_all('a'):
         title_length = len(i.text)
         if title_length >= 10:
             title.append(i.text)
@@ -63,9 +63,9 @@ def get_list_of_urls():
 
     urls_to_post = {}
 
-    for i in range(len(all_urls)):
-        if all_urls[i] != last_url:
-            urls_to_post[all_urls[i]] = title[i]
+    for i, j in enumerate(all_urls):
+        if j != last_url:
+            urls_to_post[j] = title[i]
         else:
             break
 
@@ -75,7 +75,7 @@ def get_list_of_urls():
     return urls_to_post
 
 
-def fun():
+def post():
     bot = telegram.Bot(token=TOKEN)
     dict_ = get_list_of_urls()
 
@@ -86,16 +86,17 @@ def fun():
         iv = f"http://t.me/iv?url={i}&rhash=1398b799d706ac"
         message = message_template.format(
             link=iv, title=dict_[i], lin="[link]")
-        log.info("message: {}".format(message))
+        log.info(f"message: {message}")
         bot.sendMessage(chat_id=CHANNEL,
-                        parse_mode=telegram.ParseMode.HTML, text=message, disable_web_page_preview=False)
+                        parse_mode=telegram.ParseMode.HTML, text=message,
+                        disable_web_page_preview=False)
         sleep(180)
 
 
 def main() -> None:
 
     while True:
-        fun()
+        post()
         sleep(7200)
 
 
