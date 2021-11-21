@@ -8,13 +8,16 @@ import telegram
 import requests
 from bs4 import BeautifulSoup
 import dotenv
+import github
 
 dotenv_file = dotenv.find_dotenv()
 dotenv.load_dotenv(dotenv_file)
 
 TOKEN = os.getenv('TOKEN')
 CHANNEL = os.getenv('CHANNEL')
+GTOKEN = os.getenv('GTOKEN')
 PORT = int(os.environ.get('PORT', 5000))
+GIST_ID = os.getenv('GIST_ID')
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -27,15 +30,26 @@ formatter = logging.Formatter(
 ch.setFormatter(formatter)
 log.addHandler(ch)
 
-
-def read_from_file():
-    with open("last_posted_url.id", "r") as file1:
-        return file1.read().splitlines()
+gh = github.Github(GTOKEN)
+gist = gh.get_gist(GIST_ID)
 
 
-def write_to_file(url):
-    with open("last_posted_url.id", "w") as file1:
-        file1.write(str(url[0]))
+def read_last_posted_url():
+    try:
+        file = gist.files['ie_url'].content
+        return file.strip()
+    except:
+        log.exception("Error reading url file")
+
+
+def write_last_posted_url(url):
+    try:
+        gist.edit(
+            description="using for heroku",
+            files={"ie_url": github.InputFileContent(content=url[0])},
+        )
+    except:
+        log.exception("Error writing url file")
 
 
 def get_list_of_urls():
@@ -59,7 +73,7 @@ def get_list_of_urls():
             title.append(i.text)
             all_urls.append(i.get('href'))
 
-    last_url = str(read_from_file()[0])
+    last_url = str(read_last_posted_url())
 
     urls_to_post = {}
 
@@ -70,7 +84,7 @@ def get_list_of_urls():
             break
 
     if bool(urls_to_post):
-        write_to_file(list(urls_to_post)[:1])
+        write_last_posted_url(list(urls_to_post)[:1])
 
     return urls_to_post
 
@@ -95,9 +109,7 @@ def post():
 
 def main() -> None:
 
-    while True:
-        post()
-        sleep(7200)
+    post()
 
 
 if __name__ == '__main__':
