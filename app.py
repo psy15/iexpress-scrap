@@ -85,8 +85,10 @@ def get_list_of_urls():
 
     if bool(urls_to_post):
         write_last_posted_url(list(urls_to_post)[:1])
+        return urls_to_post
 
-    return urls_to_post
+    log.info('no new posts found..')
+    exit()
 
 
 def post():
