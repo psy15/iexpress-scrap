@@ -105,6 +105,10 @@ def post():
         bot.sendMessage(chat_id=CHANNEL,
                         parse_mode=telegram.ParseMode.HTML, text=message,
                         disable_web_page_preview=False)
+
+        if i == list(dict_)[0]:
+            break
+
         sleep(180)
 
 
