@@ -60,11 +60,13 @@ def get_list_of_urls():
 
     all_urls, title = [], []
 
+    # get featured headline
     headline = soup.find("div", {"class": "northeast-topbox"})
     for i in headline.find_all('a'):
         title.append(i.text)
         all_urls.append(i.get('href'))
 
+    # rest of the news
     data = soup.find(id="north-east-data")
     for i in data.find_all('a'):
         title_length = len(i.text)
@@ -78,34 +80,50 @@ def get_list_of_urls():
 
     for i, j in enumerate(all_urls):
         if j != last_url:
-            urls_to_post[j] = title[i]
+            urls_to_post[j] = [title[i]]
         else:
             break
 
+    # get tags
+    for i in urls_to_post:
+        response = requests.get(i)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        data = soup.find("div", {"class": "storytags ev-meter-content"})
+        tags = ""
+        #make tag lowercase and prepend with #
+        for j in data.find_all('a'):
+            tags += ' #' + j.text.lower().replace(' ', '_')
+
+        urls_to_post[i].append(tags)
+
+    # cwrite to file heck if dictionary if empty
     if bool(urls_to_post):
         write_last_posted_url(list(urls_to_post)[:1])
         return urls_to_post
 
     log.info('no new posts found..')
-    exit()
+    exit()  # exit if empty
 
 
 def post():
     bot = telegram.Bot(token=TOKEN)
     dict_ = get_list_of_urls()
 
-    message_template = "<b>{title}</b><a href='{link}'> {text}</a>"
+    message_template = "<b>{title}</b><a href='{link}'> {text}</a> {tags}"
 
     for i in reversed(dict_):
 
         iv = f"http://t.me/iv?url={i}&rhash=1398b799d706ac"
+
+        # dict[i][0] is url, dict[i][1] is tag string
         message = message_template.format(
-            link=iv, title=dict_[i], text="[link]")
+            link=iv, title=dict_[i][0], text="[link]", tags=dict_[i][1])
         log.info(f"posting message: {message}")
         bot.sendMessage(chat_id=CHANNEL,
                         parse_mode=telegram.ParseMode.HTML, text=message,
                         disable_web_page_preview=False)
 
+        #if last message then break, break without delay
         if i == list(dict_)[0]:
             break
 
