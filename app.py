@@ -92,7 +92,7 @@ def get_list_of_urls():
         tags = ""
         #make tag lowercase and prepend with #
         for j in data.find_all('a'):
-            tags += ' #' + j.text.lower().replace(' ', '_')
+            tags += ' #' + j.text.lower().replace(' ', '_').replace('-', '_')
 
         urls_to_post[i].append(tags)
 
@@ -123,7 +123,7 @@ def post():
                         parse_mode=telegram.ParseMode.HTML, text=message,
                         disable_web_page_preview=False)
 
-        #if last message then break, break without delay
+        # if last message then break, break without delay
         if i == list(dict_)[0]:
             break
 
