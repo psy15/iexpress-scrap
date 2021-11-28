@@ -94,7 +94,7 @@ def get_list_of_urls():
         for j in data.find_all('a'):
             tags += ' #' + j.text.lower().replace(' ', '_').replace('-', '_')
 
-        urls_to_post[i].append(tags)
+        urls_to_post[i].append(tags[1:])
 
     # cwrite to file heck if dictionary if empty
     if bool(urls_to_post):
@@ -109,7 +109,7 @@ def post():
     bot = telegram.Bot(token=TOKEN)
     dict_ = get_list_of_urls()
 
-    message_template = "<b>{title}</b><a href='{link}'> {text}</a> {tags}"
+    message_template = "<b>{title}</b><a href='{link}'> {text}</a> \n{tags}"
 
     for i in reversed(dict_):
 
