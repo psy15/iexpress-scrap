@@ -89,7 +89,13 @@ def get_list_of_urls():
         response = requests.get(i)
         soup = BeautifulSoup(response.text, 'html.parser')
         data = soup.find("div", {"class": "storytags ev-meter-content"})
+
         tags = ""
+        # if no tags
+        if data is None:
+            urls_to_post[i].append('')
+            break
+
         #make tag lowercase and prepend with #
         for j in data.find_all('a'):
             tags += ' #' + j.text.lower().replace(' ', '_').replace('-', '_')
