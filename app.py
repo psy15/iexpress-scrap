@@ -94,7 +94,7 @@ def get_list_of_urls():
         # if no tags
         if data is None:
             urls_to_post[i].append('')
-            break
+            continue
 
         #make tag lowercase and prepend with #
         for j in data.find_all('a'):
