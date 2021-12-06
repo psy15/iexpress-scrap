@@ -123,7 +123,7 @@ def post():
 
         # dict[i][0] is url, dict[i][1] is tag string
         message = message_template.format(
-            link=iv, title=dict_[i][0], text="[link]", tags=dict_[i][1])
+            link=iv, title=dict_[i][0], text="🔗", tags=dict_[i][1])
         log.info(f"posting message: {message}")
         bot.sendMessage(chat_id=CHANNEL,
                         parse_mode=telegram.ParseMode.HTML, text=message,
