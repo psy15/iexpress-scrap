@@ -2,7 +2,8 @@ import os
 import sys
 import github
 import dotenv
-import logging
+from logger import log
+
 
 dotenv_file = dotenv.find_dotenv()
 dotenv.load_dotenv(dotenv_file)
@@ -10,16 +11,6 @@ dotenv.load_dotenv(dotenv_file)
 GTOKEN = os.getenv('GTOKEN')
 GIST_ID = os.getenv('GIST_ID')
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
-log.propagate = False
-
-ch = logging.StreamHandler(sys.stdout)
-ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter(
-    '%(asctime)s - %(name)s- %(levelname)s - %(message)s')
-ch.setFormatter(formatter)
-log.addHandler(ch)
 
 gh = github.Github(GTOKEN)
 gist = gh.get_gist(GIST_ID)
