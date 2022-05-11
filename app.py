@@ -14,7 +14,7 @@ from gist_handling import read_last_posted_url_from_gist, write_last_posted_url_
 dotenv_file = dotenv.find_dotenv()
 dotenv.load_dotenv(dotenv_file)
 
-TOKEN = os.getenv('TOKEN1')
+TOKEN = os.getenv('TOKEN')
 CHANNEL = os.getenv('CHANNEL')
 PORT = int(os.environ.get('PORT', 5000))
 TARGET_URL = os.getenv('TARGET_URL')

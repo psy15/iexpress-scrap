@@ -1,5 +1,4 @@
 import os
-import sys
 import github
 import dotenv
 from logger import log
@@ -27,7 +26,7 @@ def read_last_posted_url_from_gist() -> str:
 def write_last_posted_url_to_gist(url: str) -> None:
     try:
         gist.edit(
-            description="using for heroku",
+            description="last posted url updated!",
             files={"ie_url": github.InputFileContent(content=url[0])},
         )
     except:
