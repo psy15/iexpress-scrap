@@ -8,17 +8,17 @@ import telegram
 import requests
 from bs4 import BeautifulSoup
 import dotenv
-import github
+
+from gist_handling import read_last_posted_url_from_gist, write_last_posted_url_to_gist
 
 dotenv_file = dotenv.find_dotenv()
 dotenv.load_dotenv(dotenv_file)
 
 TOKEN = os.getenv('TOKEN')
 CHANNEL = os.getenv('CHANNEL')
-GTOKEN = os.getenv('GTOKEN')
 PORT = int(os.environ.get('PORT', 5000))
-GIST_ID = os.getenv('GIST_ID')
 TARGET_URL = os.getenv('TARGET_URL')
+
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -30,27 +30,6 @@ formatter = logging.Formatter(
     '%(asctime)s - %(name)s- %(levelname)s - %(message)s')
 ch.setFormatter(formatter)
 log.addHandler(ch)
-
-gh = github.Github(GTOKEN)
-gist = gh.get_gist(GIST_ID)
-
-
-def read_last_posted_url_from_gist() -> str:
-    try:
-        file = gist.files['ie_url'].content
-        return file.strip()
-    except:
-        log.exception("Error reading gist")
-
-
-def write_last_posted_url_to_gist(url: str) -> None:
-    try:
-        gist.edit(
-            description="using for heroku",
-            files={"ie_url": github.InputFileContent(content=url[0])},
-        )
-    except:
-        log.exception("Error writing gist")
 
 
 def get_list_of_urls() -> dict:
@@ -74,6 +53,9 @@ def get_list_of_urls() -> dict:
             title.append(i.text)
             all_urls.append(i.get('href'))
 
+    # similar to line 70 to 75
+    # print(list(filter(lambda it: len(it[0])>10,map(lambda item: (item.text, item.get('href')), data.find_all('a')))))
+
     last_url = read_last_posted_url_from_gist()
     urls_to_post = {}
 
@@ -95,13 +77,13 @@ def get_list_of_urls() -> dict:
             urls_to_post[i].append('')
             continue
 
-        #make tag lowercase, replace spaces with '_' and prepend str    23 with #
-        for j in data.find_all('a'):
-            tags += f" #{j.text.lower().replace(' ', '_').replace('-', '_')}"
+        # make tag lowercase, replace spaces and '-' with '_' and prepend str with #
+        for tag in data.find_all('a'):
+            tags += f" #{tag.text.lower().replace(' ', '_').replace('-', '_')}"
 
         urls_to_post[i].append(tags.lstrip())
 
-    # cwrite to file heck if dictionary if empty
+    # write to file if dictionary if empty
     if bool(urls_to_post):
         write_last_posted_url_to_gist(list(urls_to_post)[:1])
         return urls_to_post
