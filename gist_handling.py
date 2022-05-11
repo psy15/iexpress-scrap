@@ -7,8 +7,8 @@ from logger import log
 dotenv_file = dotenv.find_dotenv()
 dotenv.load_dotenv(dotenv_file)
 
-GTOKEN = os.getenv('GTOKEN')
-GIST_ID = os.getenv('GIST_ID')
+GTOKEN = os.environ['GTOKEN']
+GIST_ID = os.environ['GIST_ID']
 
 
 gh = github.Github(GTOKEN)
