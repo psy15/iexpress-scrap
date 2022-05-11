@@ -1,5 +1,4 @@
 import os
-import logging
 import sys
 from time import sleep
 import telegram
@@ -8,28 +7,17 @@ import telegram
 import requests
 from bs4 import BeautifulSoup
 import dotenv
+from logger import log
 
 from gist_handling import read_last_posted_url_from_gist, write_last_posted_url_to_gist
 
 dotenv_file = dotenv.find_dotenv()
 dotenv.load_dotenv(dotenv_file)
 
-TOKEN = os.getenv('TOKEN')
+TOKEN = os.getenv('TOKEN1')
 CHANNEL = os.getenv('CHANNEL')
 PORT = int(os.environ.get('PORT', 5000))
 TARGET_URL = os.getenv('TARGET_URL')
-
-
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
-log.propagate = False
-
-ch = logging.StreamHandler(sys.stdout)
-ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter(
-    '%(asctime)s - %(name)s- %(levelname)s - %(message)s')
-ch.setFormatter(formatter)
-log.addHandler(ch)
 
 
 def get_list_of_urls() -> dict:
@@ -66,22 +54,22 @@ def get_list_of_urls() -> dict:
             break
 
     # get tags
-    for i in urls_to_post:
-        response = requests.get(i)
+    for url in urls_to_post:
+        response = requests.get(url)
         soup = BeautifulSoup(response.text, 'html.parser')
         data = soup.find("div", {"class": "storytags ev-meter-content"})
 
         tags = ""
         # if no tags
         if data is None:
-            urls_to_post[i].append('')
+            urls_to_post[url].append('')
             continue
 
         # make tag lowercase, replace spaces and '-' with '_' and prepend str with #
         for tag in data.find_all('a'):
             tags += f" #{tag.text.lower().replace(' ', '_').replace('-', '_')}"
 
-        urls_to_post[i].append(tags.lstrip())
+        urls_to_post[url].append(tags.lstrip())
 
     # write to file if dictionary if empty
     if bool(urls_to_post):
@@ -89,26 +77,28 @@ def get_list_of_urls() -> dict:
         return urls_to_post
 
     log.info('no new posts found..')
-    exit()  # exit if empty
+    sys.exit()  # exit if empty
 
 
+# post message to channel
 def post() -> None:
     bot = telegram.Bot(token=TOKEN)
-    dict_ = get_list_of_urls()
+    mapped_urls = get_list_of_urls()
+    # mapped_urls : { url: [title,tags]}
 
     message_template = "<b>{title}</b><a href='{link}'> {text}</a> \n{tags}"
 
-    for i in reversed(dict_):
+    for url, (title, tags) in reversed(mapped_urls.items()):
 
-        iv_url = f"http://t.me/iv?url={i}&rhash=1398b799d706ac"
+        iv_url = f"http://t.me/iv?url={url}&rhash=1398b799d706ac"
 
-        # dict[i][0] is url, dict[i][1] is tag string
         message = message_template.format(
             link=iv_url,
-            title=dict_[i][0],
+            title=title,
             text="🔗",
-            tags=dict_[i][1]
+            tags=tags
         )
+
         log.info("posting message: %s", message)
 
         bot.sendMessage(
@@ -119,7 +109,7 @@ def post() -> None:
         )
 
         # if last message then break, break without delay
-        if i == list(dict_)[0]:
+        if url == list(mapped_urls)[0]:
             break
 
         sleep(180)
