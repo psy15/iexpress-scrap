@@ -20,38 +20,39 @@ PORT = os.environ['PORT']
 TARGET_URL = os.environ['TARGET_URL']
 
 
+def map_url_to_title(hyperlinks, urls_to_post, last_url):
+
+    for hyperlink in hyperlinks:
+        title = hyperlink.text
+        title_length = len(title)
+        url = hyperlink.get('href')
+
+        # validation
+        if title_length >= 10:
+            if url != last_url:
+                urls_to_post[url] = [title]
+            else:
+                return False
+            
+    return True  # if new posts found
+
+
 def get_list_of_urls() -> dict:
 
     response = requests.get(TARGET_URL)
     soup = BeautifulSoup(response.content, 'html.parser')
 
-    all_urls, title = [], []
-
-    # get featured headline
-    headline = soup.find("div", {"class": "northeast-topbox"})
-    for i in headline.find_all('a'):
-        title.append(i.text)
-        all_urls.append(i.get('href'))
-
-    # rest of the news
-    data = soup.find(id="north-east-data")
-    for i in data.find_all('a'):
-        title_length = len(i.text)
-        if title_length >= 10:
-            title.append(i.text)
-            all_urls.append(i.get('href'))
-
-    # similar to line 70 to 75
-    # print(list(filter(lambda it: len(it[0])>10,map(lambda item: (item.text, item.get('href')), data.find_all('a')))))
-
     last_url = read_last_posted_url_from_gist()
     urls_to_post = {}
 
-    for i, j in enumerate(all_urls):
-        if j != last_url:
-            urls_to_post[j] = [title[i]]
-        else:
-            break
+    # get featured headline
+    headline = soup.find("div", {"class": "northeast-topbox"})
+
+    # if new posts found
+    if map_url_to_title(headline.find_all('a'), urls_to_post, last_url):
+        # rest of the posts
+        data = soup.find(id="north-east-data")
+        map_url_to_title(data.find_all('a')[:10], urls_to_post, last_url)
 
     # get tags
     for url in urls_to_post:
@@ -71,7 +72,7 @@ def get_list_of_urls() -> dict:
 
         urls_to_post[url].append(tags.lstrip())
 
-    # write to file if dictionary if empty
+    # write to file if dictionary is not empty
     if bool(urls_to_post):
         write_last_posted_url_to_gist(list(urls_to_post)[:1])
         return urls_to_post
