@@ -33,7 +33,7 @@ def map_url_to_title(hyperlinks, urls_to_post, last_url):
                 urls_to_post[url] = [title]
             else:
                 return False
-            
+
     return True  # if new posts found
 
 
@@ -91,7 +91,8 @@ def post() -> None:
 
     for url, (title, tags) in reversed(mapped_urls.items()):
 
-        iv_url = f"http://t.me/iv?url={url}&rhash=1398b799d706ac"
+        # iv_url = f"http://t.me/iv?url={url}&rhash=1398b799d706ac"
+        iv_url = url
 
         message = message_template.format(
             link=iv_url,
